@@ -59,7 +59,7 @@ def go_to_prof_page():
     uGrads = Checkbutton(frame,text = "UnderGrad(s)")
     uGrads.pack()
 
-    nextButton = Button(frame, text = "Next",font = ("Times New Roman", 20))
+    nextButton = Button(frame, text = "Next",font = ("Times New Roman", 20), command = lambda: go_to_prof2_page())
     nextButton.pack()
 
     backButton = Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_main_page())
@@ -67,7 +67,39 @@ def go_to_prof_page():
 
     frame.update_idletasks() # This makes the entries render.
 
+# def go_to_prof2_page():
+#     clear_frame()
 
+#     profText = Label(frame, text = 'This is a...', font=("Times New Roman", 14))
+#     profText.pack()
+
+#     paid = Checkbutton(frame, text = "paid")
+#     paid.pack()
+#     uPaid = Checkbutton(frame,text = "unpaid")
+#     uPaid.pack()
+
+#     profText2 = Label(frame, text = '...', font=("Times New Roman", 14))
+#     profText2.pack()
+
+#     volunteer = Checkbutton(frame, text = "volunteer")
+#     volunteer.pack()
+#     gradR = Checkbutton(frame,text = "grad research")
+#     gradR.pack()
+#     iStudy = Checkbutton(frame, text = "independent study")
+#     iStudy.pack()
+
+#     profText3 = Label(frame, text = '...oppurtunity.', font=("Times New Roman", 14))
+#     profText3.pack()
+    
+#     nextButton = Button(frame, text = "Next",font = ("Times New Roman", 20))
+#     nextButton.pack()
+
+#     backButton = Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_prof_page())
+#     backButton.pack()
+
+
+
+#     frame.update_idletasks()
 
 
 root = Tk()
