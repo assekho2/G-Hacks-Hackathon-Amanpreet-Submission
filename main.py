@@ -17,19 +17,56 @@ def go_to_main_page():
 
 def go_to_stud_page():
     clear_frame()
+
     studText = Label(frame, text = 'Enter keywords to search professors by. Sepearted by commas like so, "Computer Science, Machine Learning, AI". Case insensitive', font = ("Times New Roman", 20), wraplength= 800)
     studText.pack()
+
     keyWords = StringVar(value = '')
     keyWordEntry = Entry(frame, textvariable = keyWords, font=("Times New Roman", 14))
     keyWordEntry.pack(pady=10)
-    frame.update_idletasks()
+    frame.update_idletasks() # This makes the entry render.
+
     nextButton = Button(frame, text = "Next",font = ("Times New Roman", 20))
     nextButton.pack()
 
-    
+    backButton = Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_main_page())
+    backButton.pack()
 
+
+    
 def go_to_prof_page():
     clear_frame()
+
+    profText = Label(frame, text = 'My full name is...', font=("Times New Roman", 14))
+    profText.pack()
+
+    profName = StringVar(value = '')
+    nameEntry = Entry(frame, textvariable = profName, font=("Times New Roman", 14))
+    nameEntry.pack(pady=10)
+
+    profText2 = Label(frame, text = 'My UofA email is...', font=("Times New Roman", 14))
+    profText2.pack()
+
+    profEmail = StringVar(value = '')
+    emailEntry = Entry(frame, textvariable = profEmail, font=("Times New Roman", 14))
+    emailEntry.pack(pady=10)
+
+    profText3 = Label(frame, text = 'I am looking for ...', font=("Times New Roman", 14))
+    profText3.pack()
+
+    grads = Checkbutton(frame, text = "Grad(s)")
+    grads.pack()
+    uGrads = Checkbutton(frame,text = "UnderGrad(s)")
+    uGrads.pack()
+
+    nextButton = Button(frame, text = "Next",font = ("Times New Roman", 20))
+    nextButton.pack()
+
+    backButton = Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_main_page())
+    backButton.pack()
+
+    frame.update_idletasks() # This makes the entries render.
+
 
 
 
