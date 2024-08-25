@@ -69,35 +69,49 @@ def go_to_stud_page():
     entries = opps.find()
     sKeyWords = []
     for entry in entries:
-        for keyWord in entry.get("KeyWords"):
+        for keyWord in entry.get("KeyWords", []):  # Add a default empty list to avoid NoneType error
             x = keyWord.lower()
             if x not in sKeyWords:
                 sKeyWords.append(x)
-    print(sKeyWords)
 
-    studText = i.Label(frame, text = 'Choose keywords to search professors by. Sepearted by commas like so, "Computer Science, Machine Learning, AI". Case insensitive', font = ("Times New Roman", 20), wraplength= 800)
+    studText = i.Label(frame, text='Choose keywords to search professors by. Separated by commas like so, "Computer Science, Machine Learning, AI". Case insensitive', font=("Times New Roman", 20), wraplength=800)
     studText.pack()
 
-    keyword_listbox = i.Listbox(root, selectmode=i.MULTIPLE, height=len(sKeyWords))
+    # Create a frame to center the Listbox
+    listbox_frame = i.Frame(frame)
+    listbox_frame.pack(padx=20, pady=20, fill="both", expand=True)
+
+    # Create the Listbox
+    keyword_listbox = i.Listbox(listbox_frame, selectmode=i.MULTIPLE, height=10)  # Adjust height as needed
+    keyword_listbox.pack(pady=20, fill="x", expand=True)
+    
+    # Insert keywords into the Listbox
     for keyword in sKeyWords:
         keyword_listbox.insert(i.END, keyword)
-    
-    keyword_listbox.pack(padx=20, pady=20)
 
-    selected_indices = keyword_listbox.curselection()  # Get selected indices
-    selected_keywords = [keyword_listbox.get(i) for i in selected_indices]
+    # Center the Listbox within the frame
+    listbox_frame.grid_rowconfigure(0, weight=1)
+    listbox_frame.grid_columnconfigure(0, weight=1)
+    keyword_listbox.grid(row=0, column=0, padx=10, pady=10)
 
-    
-    frame.update_idletasks() # This makes the entry render.
+    frame.update_idletasks()  # This makes the entry render.
 
-    searchButton = i.Button(frame, text = "Search",font = ("Times New Roman", 20), command = lambda: go_to_stud3_page(selected_keywords))
-    searchButton.pack()
+    # Update selected_keywords when the "Search" button is clicked
+    searchButton = i.Button(
+        frame,
+        text="Search",
+        font=("Times New Roman", 20),
+        command=lambda: go_to_stud3_page([keyword_listbox.get(i) for i in keyword_listbox.curselection()])
+    )
+    searchButton.pack(pady=10)
 
-    searchNButton = i.Button(frame, text = "Search with no key words",font = ("Times New Roman", 20), command = lambda: go_to_stud2_page())
-    searchNButton.pack()
+    searchNButton = i.Button(frame, text="Search with no key words", font=("Times New Roman", 20), command=go_to_stud2_page)
+    searchNButton.pack(pady=10)
 
-    backButton = i.Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_main_page())
-    backButton.pack()
+    backButton = i.Button(frame, text="Back", font=("Times New Roman", 20), command=go_to_main_page)
+    backButton.pack(pady=10)
+
+
 
 def go_to_stud2_page():
     clear_frame()
@@ -161,7 +175,7 @@ def go_to_stud3_page(selected_keywords):
     entry_frame = i.Frame(canvas)
     
     # Create a window on the canvas to contain the entry_frame
-    canvas.create_window((0, 0), window=entry_frame, anchor="nw")
+    window_id = canvas.create_window((0, 0), window=entry_frame, anchor="nw")
     canvas.grid(row=0, column=0, sticky="nsew")
     scrollbar.grid(row=0, column=1, sticky="ns")
     canvas.configure(yscrollcommand=scrollbar.set)
@@ -206,7 +220,8 @@ def go_to_stud3_page(selected_keywords):
     x = max(0, (canvas_width - entry_frame_width) // 2)
     y = 0  # Start from the top of the canvas
 
-    canvas.coords(entry_frame, x, y)
+    # Update the position of entry_frame using the window ID
+    canvas.coords(window_id, x, y)  # Adjust the window position
     canvas.yview_moveto(0)
     
     backButton = i.Button(frame, text="Back", font=("Times New Roman", 20), command=lambda: go_to_main_page())
@@ -215,6 +230,7 @@ def go_to_stud3_page(selected_keywords):
     frame.grid_rowconfigure(0, weight=1)
     frame.grid_rowconfigure(1, weight=0)
     frame.grid_columnconfigure(0, weight=1)
+
 
 
 
@@ -320,7 +336,7 @@ def go_to_prof3_page():
     dateEntry = i.Entry(frame, textvariable = date, font=("Times New Roman", 14))
     dateEntry.pack(pady=10)
 
-    profText3 = i.Label(frame, text = "Finally, add some keywords for this. They should be related to what the research/work this position is related to. For example for a AI position the key words might be, AI, Artificial intelligence, ML.", font=("Times New Roman", 15), wraplength= 400)
+    profText3 = i.Label(frame, text = 'Finally, add some keywords for this. They should be related to what the research/work this position is related to. For example for a AI position the key words might be, "AI, Artificial intelligence, ML." Make sure to seperate them with commas!', font=("Times New Roman", 15), wraplength= 400)
     profText3.pack()
 
     keyWordEntry = i.Entry(frame, textvariable = pKeyWords, font=("Times New Roman", 14))
