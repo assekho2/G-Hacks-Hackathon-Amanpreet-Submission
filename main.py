@@ -1,10 +1,9 @@
 from tkinter import *
 from pymongo import MongoClient
+from datetime import datetime
 
 client = MongoClient("mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000")
-
 db = client.oppurtunitiesdb
-
 opps = db.opps 
 
 def clear_frame():
@@ -33,11 +32,45 @@ def go_to_stud_page():
     keyWordEntry.pack(pady=10)
     frame.update_idletasks() # This makes the entry render.
 
-    nextButton = Button(frame, text = "Next",font = ("Times New Roman", 20))
-    nextButton.pack()
+    searchButton = Button(frame, text = "Search",font = ("Times New Roman", 20))
+    searchButton.pack()
+
+    searchNButton = Button(frame, text = "Search with no key words",font = ("Times New Roman", 20), command = lambda: go_to_stud2_page())
+    searchNButton.pack()
 
     backButton = Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_main_page())
     backButton.pack()
+
+def go_to_stud2_page():
+    clear_frame()
+    
+    # All this is to have the scrollbar
+    canvas = Canvas(frame)
+    scrollbar = Scrollbar(frame, orient="vertical", command=canvas.yview)
+    entry_frame = Frame(canvas)  
+    canvas.create_window((0, 0), window=entry_frame, anchor="nw")
+    canvas.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
+    canvas.configure(yscrollcommand=scrollbar.set)
+    
+
+    entries = opps.find()
+    
+    # Display each entry in the entry_frame
+    for entry in entries:
+        entry_text = f"Entry ID: {entry.get('_id')}\n"
+        for key, value in entry.items():
+            if key != '_id':
+                entry_text += f"{key}: {value}\n"
+        entry_label = Label(entry_frame, text=entry_text, relief="ridge", padx=10, pady=10)
+        entry_label.pack(pady=5, fill="x")
+    
+    # Update the Canvas scroll region
+    entry_frame.update_idletasks()
+    canvas.config(scrollregion=canvas.bbox("all"))
+
+    backButton = Button(frame, text="Back", font=("Times New Roman", 20), command=lambda: go_to_main_page())
+    backButton.pack(pady=10)
 
 
 
@@ -46,6 +79,7 @@ def go_to_prof_page():
 
     global profName
     global profEmail
+    global profSite
     global gradVar
     global uGradVar
 
@@ -60,6 +94,12 @@ def go_to_prof_page():
 
     emailEntry = Entry(frame, textvariable = profEmail, font=("Times New Roman", 14))
     emailEntry.pack(pady=10)
+
+    profSiteText = Label(frame, text = 'The link to my UofA homepage is...', font=("Times New Roman", 14))
+    profSiteText.pack()
+
+    siteEntry = Entry(frame, textvariable = profSite, font=("Times New Roman", 14))
+    siteEntry.pack(pady=10)
 
     profText3 = Label(frame, text = 'I am looking for ...', font=("Times New Roman", 14))
     profText3.pack()
@@ -120,14 +160,21 @@ def go_to_prof3_page():
     clear_frame()
 
     global desc
+    global date
 
-    profText = Label(frame, text = 'Finally, add a description for the position', font=("Times New Roman", 20) )
+    profText = Label(frame, text = 'Add a description for the position.', font=("Times New Roman", 20) )
     profText.pack()
 
     descEntry = Entry(frame, textvariable = desc, font=("Times New Roman", 14))
     descEntry.pack(pady=10)
 
-    finishButton = Button(frame, text = "Finish",font = ("Times New Roman", 20), command = lambda: pp(profName, profEmail))
+    profText2 = Label(frame, text = "Enter the application deadline. (YYYY-MM-DD):", font=("Times New Roman", 20))
+    profText2.pack()
+
+    dateEntry = Entry(frame, textvariable = date, font=("Times New Roman", 14))
+    dateEntry.pack(pady=10)
+
+    finishButton = Button(frame, text = "Finish",font = ("Times New Roman", 20), command = lambda: pp())
     finishButton.pack()
 
     backButton = Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_prof2_page())
@@ -135,15 +182,9 @@ def go_to_prof3_page():
 
     frame.update_idletasks()
 
-def pp(name, email):
-    print(name.get())
-    print(email.get())
-    print(desc.get())
-    print(uGradVar.get())
-    print(gradVar.get())
-    print(volunteerVar.get())
-    print(gResearchVar.get())
-    print(iStudyVar.get())
+def pp():
+    specifiedDate = datetime.strptime(date.get(), "%Y-%m-%d")
+    opps.insert_one({"name":profName.get(), "email": profEmail.get(), "site":profSite.get(), "description":desc.get(), "date":specifiedDate, "graduate": gradVar.get(), "undergrad":uGradVar.get(), "compensation":paidVar.get(), "volunteer":volunteerVar.get(), 'grad_research':gResearchVar.get(), 'independent_study': iStudyVar.get()})
 
 root = Tk()
 frame = Frame(root)
@@ -154,10 +195,14 @@ root.title('Easy UofA Lab Finder')
 # All global variables using this library must be declared after root = Tk().
 global profName
 global profEmail 
+global profSite
 global desc
+global date
 profName = StringVar()
 profEmail = StringVar()
+profSite = StringVar()
 desc = StringVar()
+date = StringVar()
 global gradVar
 global uGradVar
 global paidVar
@@ -172,5 +217,4 @@ gResearchVar = IntVar()
 iStudyVar = IntVar()
 
 go_to_main_page()
-
 root.mainloop()

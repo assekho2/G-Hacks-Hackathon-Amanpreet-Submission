@@ -1,34 +1,53 @@
-import tkinter as tk
+import requests
+from bs4 import BeautifulSoup
+import nltk
+import ssl
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from collections import Counter
 
-# Step 1: Create a global StringVar
 
 
-def update_variable():
-    """
-    This function will be called to demonstrate that the global_string_var
-    can be accessed and used in different functions.
-    """
-    global global_string_var
-    print("Current value of the variable:", global_string_var.get())
 
-def main():
-    # Create the main window
-    root = tk.Tk()
-    root.title("Tkinter StringVar Exa   mple")
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
 
-    global global_string_var
-    global_string_var = tk.StringVar()
+nltk.download()
+
+
+
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
+# Function to scrape text from a URL
+def scrape_text(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        return soup.get_text()
+    else:
+        raise Exception('Failed to retrieve the webpage')
+
+# Function to parse text and extract keywords
+def extract_keywords(text):
     
-    # Step 2: Create an Entry widget and link it to the global StringVar
-    entry = tk.Entry(root, textvariable=global_string_var)
-    entry.pack(pady=10)
+    tokens = word_tokenize(text)
+    stop_words = set(stopwords.words('english'))
+    filtered_tokens = [word for word in tokens if word.lower() not in stop_words]
+    frequency = Counter(filtered_tokens)
+    return frequency.most_common(10)
 
-    # Create a button to trigger the update_variable function
-    button = tk.Button(root, text="Print Variable", command=update_variable)
-    button.pack(pady=10)
+# URL of the webpage you want to scrape
+url = 'https://apps.ualberta.ca/directory/person/mrs'
 
-    # Start the Tkinter event loop
-    root.mainloop()
-
-if __name__ == "__main__":
-    main()
+# Scrape text and extract keywords
+try:
+    text = scrape_text(url)
+    keywords = extract_keywords(text)
+    print(keywords)
+except Exception as e:
+    print(e)
