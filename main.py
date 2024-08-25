@@ -114,14 +114,14 @@ def go_to_stud_page():
 
 
 def go_to_stud2_page():
-    clear_frame()
+    clear_frame()  # Clear the current frame to refresh the view
     
     canvas = i.Canvas(frame)
     scrollbar = i.Scrollbar(frame, orient="vertical", command=canvas.yview)
     entry_frame = i.Frame(canvas)
     
     # Create a window on the canvas to contain the entry_frame
-    canvas.create_window((0, 0), window=entry_frame, anchor="nw")
+    window_id = canvas.create_window((0, 0), window=entry_frame, anchor="nw")
     canvas.grid(row=0, column=0, sticky="nsew")
     scrollbar.grid(row=0, column=1, sticky="ns")
     canvas.configure(yscrollcommand=scrollbar.set)
@@ -132,8 +132,9 @@ def go_to_stud2_page():
     
     # Fetch entries from the database
     entries = opps.find()
+    
 
-    # Display each entry in the entry_frame
+    # Display each filtered entry in the entry_frame
     for entry in entries:
         entry_text = f"Professors Name: {entry.get('name')}\n"
         entry_text += f"Professors Email: {entry.get('email')}\n"
@@ -141,6 +142,7 @@ def go_to_stud2_page():
         entry_text += f"Description: {entry.get('description')}\n"
         entry_text += f"{format_description(entry)}\n"
         entry_text += f"Application Deadline: {entry.get('Application Deadline')}\n"
+        entry_text += f"Keywords: {', '.join(entry.get('KeyWords'))}"
         
         entry_label = i.Label(entry_frame, text=entry_text, relief="ridge", padx=10, pady=10, anchor="w", justify="left")
         entry_label.pack(pady=5, fill="x")
@@ -157,7 +159,8 @@ def go_to_stud2_page():
     x = max(0, (canvas_width - entry_frame_width) // 2)
     y = 0  # Start from the top of the canvas
 
-    canvas.coords(entry_frame, x, y)
+    # Update the position of entry_frame using the window ID
+    canvas.coords(window_id, x, y)  # Adjust the window position
     canvas.yview_moveto(0)
     
     backButton = i.Button(frame, text="Back", font=("Times New Roman", 20), command=lambda: go_to_main_page())
@@ -166,6 +169,7 @@ def go_to_stud2_page():
     frame.grid_rowconfigure(0, weight=1)
     frame.grid_rowconfigure(1, weight=0)
     frame.grid_columnconfigure(0, weight=1)
+
 
 def go_to_stud3_page(selected_keywords):
     clear_frame()  # Clear the current frame to refresh the view
@@ -204,6 +208,7 @@ def go_to_stud3_page(selected_keywords):
         entry_text += f"Description: {entry.get('description')}\n"
         entry_text += f"{format_description(entry)}\n"
         entry_text += f"Application Deadline: {entry.get('Application Deadline')}\n"
+        entry_text += f"Keywords: {', '.join(entry.get('KeyWords'))}"
         
         entry_label = i.Label(entry_frame, text=entry_text, relief="ridge", padx=10, pady=10, anchor="w", justify="left")
         entry_label.pack(pady=5, fill="x")
@@ -230,9 +235,6 @@ def go_to_stud3_page(selected_keywords):
     frame.grid_rowconfigure(0, weight=1)
     frame.grid_rowconfigure(1, weight=0)
     frame.grid_columnconfigure(0, weight=1)
-
-
-
 
 
 
