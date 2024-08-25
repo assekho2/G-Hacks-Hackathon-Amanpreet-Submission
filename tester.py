@@ -1,53 +1,31 @@
-import requests
-from bs4 import BeautifulSoup
-import nltk
-import ssl
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from collections import Counter
+import tkinter as tk
 
+# Step 1: Create the main window
+root = tk.Tk()
+root.title("Multi-Select Keyword Selector")
 
+# Step 2: Create a list of keywords
+sKeyWords = ['AI', 'ML', 'Statistics', 'Data Science', 'Cybersecurity']
 
+# Step 3: Create a Listbox widget for the multi-select dropdown
+keyword_listbox = tk.Listbox(root, selectmode=tk.MULTIPLE, height=len(sKeyWords))
 
-try:
-    _create_unverified_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
-else:
-    ssl._create_default_https_context = _create_unverified_https_context
+# Step 4: Add the keywords to the Listbox
+for keyword in sKeyWords:
+    keyword_listbox.insert(tk.END, keyword)
 
-nltk.download()
+# Step 5: Pack the Listbox to make it visible
+keyword_listbox.pack(padx=20, pady=20)
 
+# Function to handle the selection and print selected keywords
+def print_selected_keywords():
+    selected_indices = keyword_listbox.curselection()  # Get selected indices
+    selected_keywords = [keyword_listbox.get(i) for i in selected_indices]  # Get selected keywords
+    print("Selected Keywords:", selected_keywords)
 
+# Step 6: Add a button to print selected keywords
+select_button = tk.Button(root, text="Select Keywords", command=print_selected_keywords)
+select_button.pack(pady=10)
 
-
-ssl._create_default_https_context = ssl._create_unverified_context
-
-# Function to scrape text from a URL
-def scrape_text(url):
-    response = requests.get(url)
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, 'html.parser')
-        return soup.get_text()
-    else:
-        raise Exception('Failed to retrieve the webpage')
-
-# Function to parse text and extract keywords
-def extract_keywords(text):
-    
-    tokens = word_tokenize(text)
-    stop_words = set(stopwords.words('english'))
-    filtered_tokens = [word for word in tokens if word.lower() not in stop_words]
-    frequency = Counter(filtered_tokens)
-    return frequency.most_common(10)
-
-# URL of the webpage you want to scrape
-url = 'https://apps.ualberta.ca/directory/person/mrs'
-
-# Scrape text and extract keywords
-try:
-    text = scrape_text(url)
-    keywords = extract_keywords(text)
-    print(keywords)
-except Exception as e:
-    print(e)
+# Step 7: Run the main loop
+root.mainloop()

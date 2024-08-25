@@ -1,93 +1,220 @@
-from tkinter import *
-from pymongo import MongoClient
-from datetime import datetime
+import constants as c
+import imports as i
 
-client = MongoClient("mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000")
+client = i.MongoClient("mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000")
 db = client.oppurtunitiesdb
-opps = db.opps 
+opps = db.opps
 
+# Helper function to get keywords
+def keyword_parser(keywords):
+    # Split the input string by commas and strip any leading or trailing whitespace from each keyword
+    keywordList = [keyword.strip() for keyword in keywords.split(',')]
+    return keywordList
+
+# Helper function to clear pages
 def clear_frame():
     for widget in frame.winfo_children():
         widget.destroy()
 
+# Helper function to create the descriptive text
+def format_description(entry):
+    description = ""
+    
+    # Determine student type
+    if entry.get('graduate') == 1 and entry.get('undergrad') == 1:
+        description += "This position is for undergraduate and graduate students. "
+    elif entry.get('graduate') == 1:
+        description += "This position is for graduate students. "
+    elif entry.get('undergrad') == 1:
+        description += "This position is for undergraduate students. "
+
+    # Determine compensation
+    if entry.get('compensation') == 1:
+        description += "This position is paid. "
+    else:
+        description += "This position is unpaid. "
+    
+    # Determine available positions
+    positions = []
+    if entry.get('volunteer') == 1:
+        positions.append("volunteer")
+    if entry.get('grad_research') == 1:
+        positions.append("graduate research")
+    if entry.get('independent_study') == 1:
+        positions.append("independent study")
+    
+    if positions:
+        description += "The positions available are: " + ", ".join(positions) + "."
+    
+    return description
+
 def go_to_main_page():
     clear_frame()
-    openingText = Label(frame, text = "I am a...", font = ("Times New Roman", 30))
+
+    openingText = i.Label(frame, text = "I am a...", font = ("Times New Roman", 30))
     openingText.pack()
 
-    studentButton = Button(frame, text = 'Student', font = ("Times New Roman", 20), command = lambda: go_to_stud_page())
+    studentButton = i.Button(frame, text = 'Student', font = ("Times New Roman", 20), command = lambda: go_to_stud_page())
     studentButton.pack()
 
-    professorButton = Button(frame, text = 'Professor', font = ("Times New Roman", 20), command = lambda: go_to_prof_page())
+    professorButton = i.Button(frame, text = 'Professor', font = ("Times New Roman", 20), command = lambda: go_to_prof_page())
     professorButton.pack()
+
+    descriptionText = i.Label(frame, text = c.description, font = ("Times New Roman", 18), wraplength=700)
+    descriptionText.pack()
 
 def go_to_stud_page():
     clear_frame()
 
-    studText = Label(frame, text = 'Enter keywords to search professors by. Sepearted by commas like so, "Computer Science, Machine Learning, AI". Case insensitive', font = ("Times New Roman", 20), wraplength= 800)
+    entries = opps.find()
+    sKeyWords = []
+    for entry in entries:
+        for keyWord in entry.get("KeyWords"):
+            x = keyWord.lower()
+            if x not in sKeyWords:
+                sKeyWords.append(x)
+    print(sKeyWords)
+
+    studText = i.Label(frame, text = 'Choose keywords to search professors by. Sepearted by commas like so, "Computer Science, Machine Learning, AI". Case insensitive', font = ("Times New Roman", 20), wraplength= 800)
     studText.pack()
 
-    keyWords = StringVar(value = '')
-    keyWordEntry = Entry(frame, textvariable = keyWords, font=("Times New Roman", 14))
-    keyWordEntry.pack(pady=10)
+    keyword_listbox = i.Listbox(root, selectmode=i.MULTIPLE, height=len(sKeyWords))
+    for keyword in sKeyWords:
+        keyword_listbox.insert(i.END, keyword)
+    
+    keyword_listbox.pack(padx=20, pady=20)
+
+    selected_indices = keyword_listbox.curselection()  # Get selected indices
+    selected_keywords = [keyword_listbox.get(i) for i in selected_indices]
+
+    
     frame.update_idletasks() # This makes the entry render.
 
-    searchButton = Button(frame, text = "Search",font = ("Times New Roman", 20))
+    searchButton = i.Button(frame, text = "Search",font = ("Times New Roman", 20), command = lambda: go_to_stud3_page(selected_keywords))
     searchButton.pack()
 
-    searchNButton = Button(frame, text = "Search with no key words",font = ("Times New Roman", 20), command = lambda: go_to_stud2_page())
+    searchNButton = i.Button(frame, text = "Search with no key words",font = ("Times New Roman", 20), command = lambda: go_to_stud2_page())
     searchNButton.pack()
 
-    backButton = Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_main_page())
+    backButton = i.Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_main_page())
     backButton.pack()
 
 def go_to_stud2_page():
     clear_frame()
     
-    # Set up the canvas and scrollbar
-    canvas = Canvas(frame)
-    scrollbar = Scrollbar(frame, orient="vertical", command=canvas.yview)
-    entry_frame = Frame(canvas)
+    canvas = i.Canvas(frame)
+    scrollbar = i.Scrollbar(frame, orient="vertical", command=canvas.yview)
+    entry_frame = i.Frame(canvas)
     
+    # Create a window on the canvas to contain the entry_frame
     canvas.create_window((0, 0), window=entry_frame, anchor="nw")
-    canvas.pack(side="left", fill="both", expand=True)
-    scrollbar.pack(side="right", fill="y")
+    canvas.grid(row=0, column=0, sticky="nsew")
+    scrollbar.grid(row=0, column=1, sticky="ns")
     canvas.configure(yscrollcommand=scrollbar.set)
+    
+    # Configure grid row and column weights to make sure they expand properly
+    frame.grid_rowconfigure(0, weight=1)
+    frame.grid_columnconfigure(0, weight=1)
+    
+    # Fetch entries from the database
+    entries = opps.find()
 
+    # Display each entry in the entry_frame
+    for entry in entries:
+        entry_text = f"Professors Name: {entry.get('name')}\n"
+        entry_text += f"Professors Email: {entry.get('email')}\n"
+        entry_text += f"Website: {entry.get('site')}\n"
+        entry_text += f"Description: {entry.get('description')}\n"
+        entry_text += f"{format_description(entry)}\n"
+        entry_text += f"Application Deadline: {entry.get('Application Deadline')}\n"
+        
+        entry_label = i.Label(entry_frame, text=entry_text, relief="ridge", padx=10, pady=10, anchor="w", justify="left")
+        entry_label.pack(pady=5, fill="x")
+    
+    # Update the canvas scroll region
+    entry_frame.update_idletasks()
+    canvas.config(scrollregion=canvas.bbox("all"))
+
+    # Adjust the canvas scrolling region and position the window
+    canvas_width = canvas.winfo_width()
+    entry_frame_width = entry_frame.winfo_reqwidth()
+    
+    # Center the entry_frame within the canvas
+    x = max(0, (canvas_width - entry_frame_width) // 2)
+    y = 0  # Start from the top of the canvas
+
+    canvas.coords(entry_frame, x, y)
+    canvas.yview_moveto(0)
+    
+    backButton = i.Button(frame, text="Back", font=("Times New Roman", 20), command=lambda: go_to_main_page())
+    backButton.grid(row=1, column=0, pady=10, sticky="s")
+
+    frame.grid_rowconfigure(0, weight=1)
+    frame.grid_rowconfigure(1, weight=0)
+    frame.grid_columnconfigure(0, weight=1)
+
+def go_to_stud3_page(selected_keywords):
+    clear_frame()  # Clear the current frame to refresh the view
+    
+    canvas = i.Canvas(frame)
+    scrollbar = i.Scrollbar(frame, orient="vertical", command=canvas.yview)
+    entry_frame = i.Frame(canvas)
+    
+    # Create a window on the canvas to contain the entry_frame
+    canvas.create_window((0, 0), window=entry_frame, anchor="nw")
+    canvas.grid(row=0, column=0, sticky="nsew")
+    scrollbar.grid(row=0, column=1, sticky="ns")
+    canvas.configure(yscrollcommand=scrollbar.set)
+    
+    # Configure grid row and column weights to make sure they expand properly
+    frame.grid_rowconfigure(0, weight=1)
+    frame.grid_columnconfigure(0, weight=1)
+    
     # Fetch entries from the database
     entries = opps.find()
     
-    # Display each entry in the entry_frame
+    # Filter entries based on the selected keywords
+    filtered_entries = []
     for entry in entries:
-        entry_text = f"Entry ID: {entry.get('_id')}\n"
-        for key, value in entry.items():
-            if key != '_id':
-                entry_text += f"{key}: {value}\n"
-        entry_label = Label(entry_frame, text=entry_text, relief="ridge", padx=10, pady=10)
-        entry_label.pack(pady=5, fill="x")
+        entry_keywords = [kw.lower() for kw in entry.get("KeyWords", [])]  # Lowercase keywords for case-insensitive matching
+        for keyword in selected_keywords:
+            if keyword.lower() in entry_keywords:
+                filtered_entries.append(entry)
+                break  # Stop checking after finding the first matching keyword
 
-    # Update the canvas scroll region and center the entry_frame
-    entry_frame.update_idletasks()  # Ensure the frame is updated
-    canvas.config(scrollregion=canvas.bbox("all"))
+    # Display each filtered entry in the entry_frame
+    for entry in filtered_entries:
+        entry_text = f"Professors Name: {entry.get('name')}\n"
+        entry_text += f"Professors Email: {entry.get('email')}\n"
+        entry_text += f"Website: {entry.get('site')}\n"
+        entry_text += f"Description: {entry.get('description')}\n"
+        entry_text += f"{format_description(entry)}\n"
+        entry_text += f"Application Deadline: {entry.get('Application Deadline')}\n"
+        
+        entry_label = i.Label(entry_frame, text=entry_text, relief="ridge", padx=10, pady=10, anchor="w", justify="left")
+        entry_label.pack(pady=5, fill="x")
     
-    # Center the frame in the canvas
+    # Update the canvas scroll region
+    entry_frame.update_idletasks()
+    canvas.config(scrollregion=canvas.bbox("all"))
+
+    # Adjust the canvas scrolling region and position the window
     canvas_width = canvas.winfo_width()
     entry_frame_width = entry_frame.winfo_reqwidth()
-
-    x = (canvas_width - entry_frame_width) // 2
+    
+    # Center the entry_frame within the canvas
+    x = max(0, (canvas_width - entry_frame_width) // 2)
     y = 0  # Start from the top of the canvas
 
-    canvas.create_window((x, y), window=entry_frame, anchor="nw")
-
-    # Set the scrollbar to the top
+    canvas.coords(entry_frame, x, y)
     canvas.yview_moveto(0)
+    
+    backButton = i.Button(frame, text="Back", font=("Times New Roman", 20), command=lambda: go_to_main_page())
+    backButton.grid(row=1, column=0, pady=10, sticky="s")
 
-    # Add a back button
-    backButton = Button(frame, text="Back", font=("Times New Roman", 20), command=lambda: go_to_main_page())
-    backButton.pack(pady=10)
-
-    # Update the canvas scroll region
-    canvas.config(scrollregion=canvas.bbox("all"))
+    frame.grid_rowconfigure(0, weight=1)
+    frame.grid_rowconfigure(1, weight=0)
+    frame.grid_columnconfigure(0, weight=1)
 
 
 
@@ -102,36 +229,36 @@ def go_to_prof_page():
     global gradVar
     global uGradVar
 
-    profText = Label(frame, text = 'My full name is...', font=("Times New Roman", 14))
+    profText = i.Label(frame, text = 'My full name is...', font=("Times New Roman", 14))
     profText.pack()
 
-    nameEntry = Entry(frame, textvariable = profName, font=("Times New Roman", 14))
+    nameEntry = i.Entry(frame, textvariable = profName, font=("Times New Roman", 14))
     nameEntry.pack(pady=10)
 
-    profText2 = Label(frame, text = 'My UofA email is...', font=("Times New Roman", 14))
+    profText2 = i.Label(frame, text = 'My UofA email is...', font=("Times New Roman", 14))
     profText2.pack()
 
-    emailEntry = Entry(frame, textvariable = profEmail, font=("Times New Roman", 14))
+    emailEntry = i.Entry(frame, textvariable = profEmail, font=("Times New Roman", 14))
     emailEntry.pack(pady=10)
 
-    profSiteText = Label(frame, text = 'The link to my UofA homepage is...', font=("Times New Roman", 14))
+    profSiteText = i.Label(frame, text = 'The link to my UofA homepage is...', font=("Times New Roman", 14))
     profSiteText.pack()
 
-    siteEntry = Entry(frame, textvariable = profSite, font=("Times New Roman", 14))
+    siteEntry = i.Entry(frame, textvariable = profSite, font=("Times New Roman", 14))
     siteEntry.pack(pady=10)
 
-    profText3 = Label(frame, text = 'I am looking for ...', font=("Times New Roman", 14))
+    profText3 = i.Label(frame, text = 'I am looking for ...', font=("Times New Roman", 14))
     profText3.pack()
 
-    grads = Checkbutton(frame, text = "Grad(s)", variable = gradVar, onvalue = 1, offvalue = 0)
+    grads = i.Checkbutton(frame, text = "Grad(s)", variable = gradVar, onvalue = 1, offvalue = 0)
     grads.pack()
-    uGrads = Checkbutton(frame,text = "UnderGrad(s)", variable = uGradVar, onvalue = 1, offvalue = 0)
+    uGrads = i.Checkbutton(frame,text = "UnderGrad(s)", variable = uGradVar, onvalue = 1, offvalue = 0)
     uGrads.pack()
 
-    nextButton = Button(frame, text = "Next",font = ("Times New Roman", 20), command = lambda: go_to_prof2_page())
+    nextButton = i.Button(frame, text = "Next",font = ("Times New Roman", 20), command = lambda: go_to_prof2_page())
     nextButton.pack()
 
-    backButton = Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_main_page())
+    backButton = i.Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_main_page())
     backButton.pack()
 
     frame.update_idletasks() # This makes the entries render.
@@ -144,35 +271,34 @@ def go_to_prof2_page():
     global gResearchVar
     global iStudyVar
 
-    profText = Label(frame, text = 'This is a...', font=("Times New Roman", 20))
+    profText = i.Label(frame, text = 'This is a...', font=("Times New Roman", 20))
     profText.pack()
 
-    paid = Checkbutton(frame, text = "paid", variable = paidVar, onvalue = 1, offvalue = 0)
+    paid = i.Checkbutton(frame, text = "paid", variable = paidVar, onvalue = 1, offvalue = 0)
     paid.pack()
-    paidText = Label(frame, text = "(Leave blank for unpaid)")
+    paidText = i.Label(frame, text = "(Leave blank for unpaid)")
     paidText.pack()
 
-    profText2 = Label(frame, text = '...', font=("Times New Roman", 20))
+    profText2 = i.Label(frame, text = '...', font=("Times New Roman", 20))
     profText2.pack()
 
-    volunteer = Checkbutton(frame, text = "volunteer", variable = volunteerVar, onvalue = 1, offvalue = 0)
+    volunteer = i.Checkbutton(frame, text = "volunteer", variable = volunteerVar, onvalue = 1, offvalue = 0)
     volunteer.pack()
-    gradR = Checkbutton(frame,text = "grad research", variable = gResearchVar, onvalue = 1, offvalue = 0)
+    gradR = i.Checkbutton(frame,text = "grad research", variable = gResearchVar, onvalue = 1, offvalue = 0)
     gradR.pack()
-    iStudy = Checkbutton(frame, text = "independent study", variable = iStudyVar, onvalue = 1, offvalue = 0)
+    iStudy = i.Checkbutton(frame, text = "independent study", variable = iStudyVar, onvalue = 1, offvalue = 0)
     iStudy.pack()
 
-    profText3 = Label(frame, text = '...oppurtunity.', font=("Times New Roman", 20))
+    profText3 = i.Label(frame, text = '...oppurtunity.', font=("Times New Roman", 20))
     profText3.pack()
     
-    nextButton = Button(frame, text = "Next",font = ("Times New Roman", 20), command = lambda: go_to_prof3_page())
+    nextButton = i.Button(frame, text = "Next",font = ("Times New Roman", 20), command = lambda: go_to_prof3_page())
     nextButton.pack()
 
-    backButton = Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_prof_page())
+    backButton = i.Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_prof_page())
     backButton.pack()
 
     frame.update_idletasks()
-
 
 
 def go_to_prof3_page():
@@ -180,33 +306,53 @@ def go_to_prof3_page():
 
     global desc
     global date
+    global pKeyWords
 
-    profText = Label(frame, text = 'Add a description for the position.', font=("Times New Roman", 20) )
+    profText = i.Label(frame, text = 'Add a description for the position.', font=("Times New Roman", 20) )
     profText.pack()
 
-    descEntry = Entry(frame, textvariable = desc, font=("Times New Roman", 14))
+    descEntry = i.Entry(frame, textvariable = desc, font=("Times New Roman", 14))
     descEntry.pack(pady=10)
 
-    profText2 = Label(frame, text = "Enter the application deadline. (YYYY-MM-DD):", font=("Times New Roman", 20))
+    profText2 = i.Label(frame, text = "Enter the application deadline. (YYYY-MM-DD):", font=("Times New Roman", 20))
     profText2.pack()
 
-    dateEntry = Entry(frame, textvariable = date, font=("Times New Roman", 14))
+    dateEntry = i.Entry(frame, textvariable = date, font=("Times New Roman", 14))
     dateEntry.pack(pady=10)
 
-    finishButton = Button(frame, text = "Finish",font = ("Times New Roman", 20), command = lambda: pp())
+    profText3 = i.Label(frame, text = "Finally, add some keywords for this. They should be related to what the research/work this position is related to. For example for a AI position the key words might be, AI, Artificial intelligence, ML.", font=("Times New Roman", 15), wraplength= 400)
+    profText3.pack()
+
+    keyWordEntry = i.Entry(frame, textvariable = pKeyWords, font=("Times New Roman", 14))
+    keyWordEntry.pack(pady=10)
+
+    finishButton = i.Button(frame, text = "Finish",font = ("Times New Roman", 20), command = lambda: pp())
     finishButton.pack()
 
-    backButton = Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_prof2_page())
+    backButton = i.Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_prof2_page())
     backButton.pack()
 
     frame.update_idletasks()
 
 def pp():
-    specifiedDate = datetime.strptime(date.get(), "%Y-%m-%d")
-    opps.insert_one({"Professors Name":profName.get(), "Professors email": profEmail.get(), "Professors Website":profSite.get(), "Description":desc.get(), "Application Deadline":specifiedDate, "graduate": gradVar.get(), "undergrad":uGradVar.get(), "compensation":paidVar.get(), "volunteer":volunteerVar.get(), 'grad_research':gResearchVar.get(), 'independent_study': iStudyVar.get()})
 
-root = Tk()
-frame = Frame(root)
+    keyWords = keyword_parser(pKeyWords.get())
+
+    try:
+        specifiedDate = i.datetime.strptime(date.get(), "%Y-%m-%d")
+    except:
+        profText1 = i.Label(frame, text = "Invalid date, wrong format", font=("Times New Roman", 20))
+        profText1.pack()
+
+    if specifiedDate < i.datetime.now():
+        profText2 = i.Label(frame, text = "Invalid date, date has already passed", font=("Times New Roman", 20))
+        profText2.pack()
+    else:
+        opps.insert_one({"name":profName.get(), "email": profEmail.get(), "site":profSite.get(), "description":desc.get(), "Application Deadline":specifiedDate, "graduate": gradVar.get(), "undergrad":uGradVar.get(), "compensation":paidVar.get(), "volunteer":volunteerVar.get(), 'grad_research':gResearchVar.get(), 'independent_study': iStudyVar.get(), "KeyWords": keyWords })
+        go_to_main_page()
+
+root = i.Tk()
+frame = i.Frame(root)
 frame.pack(fill="both", expand = True)
 root.geometry("800x500")
 root.title('Easy UofA Lab Finder')
@@ -217,23 +363,28 @@ global profEmail
 global profSite
 global desc
 global date
-profName = StringVar()
-profEmail = StringVar()
-profSite = StringVar()
-desc = StringVar()
-date = StringVar()
+global pKeyWords
+profName = i.StringVar()
+profEmail = i.StringVar()
+profSite = i.StringVar()
+desc = i.StringVar()
+date = i.StringVar()
+pKeyWords = i.StringVar()
 global gradVar
 global uGradVar
 global paidVar
 global volunteerVar
 global gResearchVar
 global iStudyVar
-gradVar = IntVar()
-uGradVar = IntVar()
-paidVar = IntVar() 
-volunteerVar = IntVar()
-gResearchVar = IntVar()
-iStudyVar = IntVar()
+gradVar = i.IntVar()
+uGradVar = i.IntVar()
+paidVar = i.IntVar() 
+volunteerVar = i.IntVar()
+gResearchVar = i.IntVar()
+iStudyVar = i.IntVar()
+
+
+
 
 go_to_main_page()
 root.mainloop()
