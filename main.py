@@ -1,5 +1,6 @@
 from tkinter import *
 
+
 def clear_frame():
     for widget in frame.winfo_children():
         widget.destroy()
