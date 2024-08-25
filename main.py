@@ -44,16 +44,17 @@ def go_to_stud_page():
 def go_to_stud2_page():
     clear_frame()
     
-    # All this is to have the scrollbar
+    # Set up the canvas and scrollbar
     canvas = Canvas(frame)
     scrollbar = Scrollbar(frame, orient="vertical", command=canvas.yview)
-    entry_frame = Frame(canvas)  
+    entry_frame = Frame(canvas)
+    
     canvas.create_window((0, 0), window=entry_frame, anchor="nw")
     canvas.pack(side="left", fill="both", expand=True)
     scrollbar.pack(side="right", fill="y")
     canvas.configure(yscrollcommand=scrollbar.set)
-    
 
+    # Fetch entries from the database
     entries = opps.find()
     
     # Display each entry in the entry_frame
@@ -64,13 +65,31 @@ def go_to_stud2_page():
                 entry_text += f"{key}: {value}\n"
         entry_label = Label(entry_frame, text=entry_text, relief="ridge", padx=10, pady=10)
         entry_label.pack(pady=5, fill="x")
-    
-    # Update the Canvas scroll region
-    entry_frame.update_idletasks()
-    canvas.config(scrollregion=canvas.bbox("all"))
 
+    # Update the canvas scroll region and center the entry_frame
+    entry_frame.update_idletasks()  # Ensure the frame is updated
+    canvas.config(scrollregion=canvas.bbox("all"))
+    
+    # Center the frame in the canvas
+    canvas_width = canvas.winfo_width()
+    entry_frame_width = entry_frame.winfo_reqwidth()
+
+    x = (canvas_width - entry_frame_width) // 2
+    y = 0  # Start from the top of the canvas
+
+    canvas.create_window((x, y), window=entry_frame, anchor="nw")
+
+    # Set the scrollbar to the top
+    canvas.yview_moveto(0)
+
+    # Add a back button
     backButton = Button(frame, text="Back", font=("Times New Roman", 20), command=lambda: go_to_main_page())
     backButton.pack(pady=10)
+
+    # Update the canvas scroll region
+    canvas.config(scrollregion=canvas.bbox("all"))
+
+
 
 
 
@@ -184,7 +203,7 @@ def go_to_prof3_page():
 
 def pp():
     specifiedDate = datetime.strptime(date.get(), "%Y-%m-%d")
-    opps.insert_one({"name":profName.get(), "email": profEmail.get(), "site":profSite.get(), "description":desc.get(), "date":specifiedDate, "graduate": gradVar.get(), "undergrad":uGradVar.get(), "compensation":paidVar.get(), "volunteer":volunteerVar.get(), 'grad_research':gResearchVar.get(), 'independent_study': iStudyVar.get()})
+    opps.insert_one({"Professors Name":profName.get(), "Professors email": profEmail.get(), "Professors Website":profSite.get(), "Description":desc.get(), "Application Deadline":specifiedDate, "graduate": gradVar.get(), "undergrad":uGradVar.get(), "compensation":paidVar.get(), "volunteer":volunteerVar.get(), 'grad_research':gResearchVar.get(), 'independent_study': iStudyVar.get()})
 
 root = Tk()
 frame = Frame(root)
