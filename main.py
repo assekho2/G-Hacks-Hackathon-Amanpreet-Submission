@@ -1,6 +1,12 @@
 from tkinter import *
 from pymongo import MongoClient
 
+client = MongoClient("mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000")
+
+db = client.oppurtunitiesdb
+
+opps = db.opps
+
 def clear_frame():
     for widget in frame.winfo_children():
         widget.destroy()
@@ -92,15 +98,33 @@ def go_to_prof2_page():
     profText3 = Label(frame, text = '...oppurtunity.', font=("Times New Roman", 20))
     profText3.pack()
     
-    finishButton = Button(frame, text = "Finish",font = ("Times New Roman", 20))
-    finishButton.pack()
+    nextButton = Button(frame, text = "Next",font = ("Times New Roman", 20), command = lambda: go_to_prof3_page())
+    nextButton.pack()
 
     backButton = Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_prof_page())
     backButton.pack()
 
+    frame.update_idletasks()
 
+
+def go_to_prof3_page():
+    clear_frame()
+
+    profText = Label(frame, text = 'Finally, add a description for the position', font=("Times New Roman", 20))
+    profText.pack()
+
+    desc = StringVar(value = '')
+    descEntry = Entry(frame, textvariable = desc, font=("Times New Roman", 14))
+    descEntry.pack(pady=10)
+
+    finishButton = Button(frame, text = "Finish",font = ("Times New Roman", 20))
+    finishButton.pack()
+
+    backButton = Button(frame, text = "Back",font = ("Times New Roman", 20), command = lambda: go_to_prof2_page())
+    backButton.pack()
 
     frame.update_idletasks()
+
 
 
 root = Tk()
